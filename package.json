@@ -24,10 +24,13 @@
     "gulp-sourcemaps": "^2.6.1",
     "gulp-tslint": "^8.1.2",
     "gulp-typescript": "^3.2.2",
+    "lodash": "^4.17.4",
+    "moment": "^2.18.1",
     "mongoose": "^4.12.0",
     "morgan": "^1.8.2",
     "nodemon": "^1.12.1",
     "redis": "^2.8.0",
+    "ts-node": "^3.3.0",
     "tslint": "^5.7.0",
     "tslint-config-airbnb": "^5.3.0",
     "typescript": "^2.5.2"
@@ -36,7 +39,8 @@
     "flow-bin": "^0.54.1"
   },
   "scripts": {
-    "server": "nodemon --watch build src/index.ts --exec babel-node --presets es2015,stage-0"
+    "server": "nodemon --watch src src/index.ts --exec babel-node --presets es2015,stage-0",
+    "ts": "nodemon --watch src src/index.ts --exec ts-node"
   },
   "repository": {
     "type": "git",
