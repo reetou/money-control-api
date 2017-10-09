@@ -3,9 +3,10 @@ import ts from 'gulp-typescript';
 import exec from 'gulp-exec';
 
 gulp.task('ts', () => {
-  return gulp.src('*/*.ts')
+  return gulp.src('*/.ts')
     .pipe(ts({
-      noImplicitAny: false
+      noImplicitAny: false,
+      allowJs: true
     }))
     .pipe(gulp.dest('build'))
 });
