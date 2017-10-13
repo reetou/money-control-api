@@ -31,7 +31,11 @@ async function getUser(name: string) {
   try {
     const result = await User.findOne({ name });
     console.log(`mongo reply`, !!result);
-    return result;
+    if (result) {
+      return result;
+    } else {
+      return false;
+    }
   } catch (e) {
     console.log(`mongo err`, e);
   }
