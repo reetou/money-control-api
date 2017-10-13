@@ -76,7 +76,7 @@ async function getStatsByPeriod(name: string, period: { y: string, m: string, d:
     console.log(`values for ${d}.${m}.${y}:`, data);
     return {
       name,
-      data,
+      data: data || [],
       status: 'SUCCESS',
     };
   } else {
