@@ -155,13 +155,34 @@ async function compareAndGet(period: IPeriodSource, user) {
   return data;
 }
 
+async function isPeriodValid(period: IPeriod) {
+  const errors = [];
+  Object.keys(period).map(i => {
+    const point = _.at(period[i], ['d', 'm', 'y']);
+    const isDateValid = date => moment(date, 'DD.MM.YYYY').isValid();
+    const formatYear = year => year.length === 2 ? `20${year}` : year;
+    point[2] = formatYear(point[2]);
+    console.log(`will return date`.blue, point.join('.'))
+    const stringified = point.join('.');
+    console.log(`value is okay`, stringified, isDateValid(stringified));
+    if (!isDateValid(stringified)) {
+      errors.push(true);
+    }
+  });
+  if (errors.length) {
+    console.log(`it has errors?`, !!errors);
+    return false;
+  }
+  console.log(`it has errors?`, errors, !!errors);
+  return true;
+}
+
 async function getStatsByPeriod(name: string, period: IPeriod) {
-  const userExists = await isUserExists(name);
   const user = await getUser(name);
-  const { y: fromY, m:fromM, d: fromD } = period.from;
-  const { y: toY, m:toM, d: toD } = period.to;
+  const { y: fromY, m: fromM, d: fromD } = period.from;
+  const { y: toY, m: toM, d: toD } = period.to;
   const allValuesExist = fromY && fromM && fromD && toY && toM && toD;
-  if (userExists && allValuesExist) {
+  if (allValuesExist) {
     const period = {
       fromM: Number(fromM),
       toM: Number(toM),
@@ -181,17 +202,14 @@ async function getStatsByPeriod(name: string, period: IPeriod) {
 }
 
 async function getStatsBySingleDate(name: string, period: IPeriod) {
-  const exists = await isUserExists(name);
   const { y, m, d } = period.from;
-  if (exists && y && m && d) {
+  if (y && m && d) {
     const user = await getUser(name);
     console.log(`user`, !!user);
-    const data = _.values(user.stats[y][m][d])
-    console.log(`valuess for ${d}.${m}.${y}:`, data, typeof data);
-    console.log(`will give data for single date (today)`.red);
+    const data = _.get(user.stats, [y, m, d], []);
+    console.log(`values for ${d}.${m}.${y}:`, data, typeof data);
+    console.log(`will give data for single date`.red);
     return data;
-  } else {
-    return [];
   }
 }
 
@@ -297,6 +315,14 @@ app.post('/stats/get', async (req: { body: { name: string, period: IPeriod } }, 
     return res.json({
       status: 'ERROR',
       message: 'User not found',
+    });
+  }
+  const isValid = await isPeriodValid(period);
+  console.log(`period is okay?`.magenta, isValid)
+  if (!isValid) {
+    return res.json({
+      status: 'ERROR',
+      message: 'Period is not valid',
     });
   }
   const getStats = async () => {
