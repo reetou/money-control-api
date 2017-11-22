@@ -4,10 +4,11 @@ const config = require('../config.json');
 import {getUser, isUserExists} from "../src/index";
 
 describe(`Server`.magenta, () => {
-	let expected;
+	let expected, badExpected;
 
 	before("Connecting to db", async () => {
 		expected = "BeaReetou";
+		badExpected = "Unexisting";
 		await mongoose.disconnect();
 		await mongoose.connect(config.database)
 	})
@@ -26,9 +27,19 @@ describe(`Server`.magenta, () => {
 		assert.isTrue(reply, "User exists");
 	})
 
+	it('should return false if user not exists', async () => {
+		const reply = await isUserExists(badExpected);
+		assert.isFalse(reply, "User not exists");
+	})
+
 	it("should return same username as expected", async () => {
 		const reply = await getUser(expected);
 		assert.equal(reply.name, expected, "Username from getting user data");
+	})
+
+	it("should return false if username at getUser not exists or anything", async () => {
+		const reply = await getUser(badExpected);
+		assert.isFalse(reply, "Result from getting bad username (non-existing)");
 	})
 })
 
