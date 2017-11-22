@@ -4,6 +4,7 @@
   "description": "Control your incomes and outcomes via this api. Or not.",
   "main": "index.js",
   "dependencies": {
+    "@types/chai": "^4.0.5",
     "@types/es6-promise": "^0.0.33",
     "@types/lodash": "^4.14.77",
     "@types/node": "^8.0.28",
@@ -15,6 +16,7 @@
     "babel-preset-stage-0": "^6.24.1",
     "bluebird": "^3.5.1",
     "body-parser": "^1.18.1",
+    "chai": "^4.1.2",
     "colors": "^1.1.2",
     "express": "^4.15.4",
     "flow-bro": "^0.4.1",
@@ -26,6 +28,7 @@
     "gulp-tslint": "^8.1.2",
     "gulp-typescript": "^3.2.2",
     "lodash": "^4.17.4",
+    "mocha": "^4.0.1",
     "moment": "^2.18.1",
     "mongoose": "^4.12.0",
     "morgan": "^1.8.2",
@@ -41,7 +44,8 @@
   },
   "scripts": {
     "server": "nodemon --watch src src/index.ts --exec babel-node --presets es2015,stage-0",
-    "ts": "nodemon --watch src src/index.ts --exec ts-node"
+    "ts": "nodemon --watch src src/index.ts --exec ts-node",
+    "test": "mocha -w -r ts-node/register"
   },
   "repository": {
     "type": "git",

@@ -1,12 +1,14 @@
-import express from 'express';
+import * as express from 'express';
 import 'colors';
 import * as _ from 'lodash';
 import * as redis from 'redis';
 import * as bodyParser from 'body-parser';
 import * as bluebird from 'bluebird';
-import mongoose from 'mongoose';
+import * as mongoose from 'mongoose';
 import User from './models/User';
-import moment from 'moment';
+import * as moment from 'moment';
+import {IPeriodSource, IPeriod, IValue} from './interfaces/index';
+import {isPeriodValid, isWithinPeriod} from './formatters';
 
 // constants
 const http = require('http');
@@ -17,40 +19,20 @@ const config = require('../config.json');
 
 console.log(`db`, config.database);
 
-mongoose.connect(config.database);
-
-const db = mongoose.connection;
+if (mongoose.connection.readyState < 1) {
+  mongoose.connect(config.database);
+}
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 console.log(`STARTED. AT: ${new Date(Date.now())}`.magenta);
 
-
-interface IValue {
-  sum: number;
-  comment: string;
-  date: moment.Moment;
-}
-
-interface IPeriod {
-  from: {
-    y: string;
-    m: string;
-    d: string;
-  };
-  to?: {
-    y: string;
-    m: string;
-    d: string;
-  };
-}
-
-async function getUser(name: string) {
-  console.log(`getting name ${name}`.green);
+export async function getUser(name: string) {
+  // console.log(`getting name ${name}`.green);
   try {
     const result = await User.findOne({ name });
-    console.log(`mongo reply`, !!result);
+    // console.log(`mongo reply`, !!result);
     if (result) {
       return result;
     } else {
@@ -61,11 +43,11 @@ async function getUser(name: string) {
   }
 }
 
-async function isUserExists(name: string) {
-  console.log(`getting name ${name}`.green);
+export async function isUserExists(name: string) {
+  // console.log(`getting name ${name}`.green);
   try {
     const result = await User.findOne({ name });
-    console.log(`mongo reply`, !!result);
+    // console.log(`mongo reply`, !!result);
     return !!result;
   } catch (e) {
     console.log(`mongo err`, e);
@@ -75,7 +57,7 @@ async function isUserExists(name: string) {
 async function editUser(name: string, val: IValue, m) {
   console.log(`at edituser`.green);
   const f = (format: string) => {
-    console.log(`m is`.red, m);
+    // console.log(`m is`.red, m);
     return m.format(format);
   };
   const user = await User.findOne({ name });
@@ -88,53 +70,35 @@ async function editUser(name: string, val: IValue, m) {
   return newUser;
 }
 
-interface IPeriodSource {
-  fromY: number;
-  toY: number;
-  toM: number;
-  fromM: number;
-  fromD: number;
-  toD: number;
-}
-
 async function compareAndGet(period: IPeriodSource, user) {
-  const { toY, fromY, toM, fromM, fromD, toD } = period;
+  const { toY, fromY } = period;
   const yearDiff = toY - fromY;
   const years = {};
   let data = [];
   const isYearDiffValid = yearDiff > 0;
   if (fromY === toY && _.has(user.stats, fromY)) {
-    console.log(`fromy and toy are identical`)
+    // console.log(`fromy and toy are identical`)
     years[fromY] = _.at(user.stats, fromY)[0];
-    console.log(`year is single and`.magenta, years[fromY], `but years are`, years);
+    // console.log(`year is single and`.magenta, years[fromY], `but years are`, years);
   } else if (isYearDiffValid) {
-    console.log(`before cycle at years`.bgYellow);
+    // console.log(`before cycle at years`.bgYellow);
     for (let i = 0; i < yearDiff + 1; i = i + 1) {
-      console.log(`in for, year is ${fromY + i}, diff is ${typeof yearDiff}: ${yearDiff}, i is ${typeof i}: ${i}`);
-      console.log(`trying to access user.stats.${fromY + i} and keys of it are`, Object.keys(user.stats))
+      // console.log(`in for, year is ${fromY + i}, diff is ${typeof yearDiff}: ${yearDiff}, i is ${typeof i}: ${i}`);
+      // console.log(`trying to access user.stats.${fromY + i} and keys of it are`, Object.keys(user.stats))
       if (_.has(user.stats, fromY + i)) {
         years[fromY + i] = _.at(user.stats, fromY + i)[0];
       }
     }
-    console.log(`period is more than one year!111`.bgYellow);
+    // console.log(`period is more than one year!111`.bgYellow);
   }
   // years получен, в нем лежат объекты с годами, которые затронуты запрошенным периодом.
-  console.log(`years finally are`, years);
+  // console.log(`years finally are`, years);
   Object.keys(years).map((year) => {
     Object.keys(years[year]).map((month) => {
-      console.log(`year is`.red, year)
+      // console.log(`year is`.red, year)
       Object.keys(years[year][month]).map((day) => {
-        console.log(`month is`.red, month)
+        // console.log(`month is`.red, month)
         const dayData = _.values(years[year][month][day]);
-        const isWithinPeriod = (current) => {
-          const before = `${fromY}-${fromM}-${fromD}`;
-          const after = `${toY}-${toM}-${toD}`;
-          const btw = (date) => {
-            return moment(date).isBetween(before, after);
-          }
-          console.log(`is between?`, btw(current), `shit is ${before}, ${after}`);
-          return btw(current);
-        }
         const f = (val) => {
           if (val.length === 1) {
             return `0${val}`;
@@ -142,42 +106,20 @@ async function compareAndGet(period: IPeriodSource, user) {
           return val;
         }
         const current = `${year}-${f(month)}-${f(day)}`
-        if (isWithinPeriod(current)) {
-          console.log(`isWithin: ${current}`.green);
+        if (isWithinPeriod(current, period)) {
+          // console.log(`isWithin: ${current}`.green);
           data = [...data, ...dayData];
         } else {
-          console.log(`NOT WITHIN: ${current}`);
+          // console.log(`NOT WITHIN: ${current}`);
         }
       });
     });
   });
-  console.log(`data finally is`, data);
+  // console.log(`data finally is`, data);
   return data;
 }
 
-async function isPeriodValid(period: IPeriod) {
-  const errors = [];
-  Object.keys(period).map(i => {
-    const point = _.at(period[i], ['d', 'm', 'y']);
-    const isDateValid = date => moment(date, 'DD.MM.YYYY').isValid();
-    const formatYear = year => year.length === 2 ? `20${year}` : year;
-    point[2] = formatYear(point[2]);
-    console.log(`will return date`.blue, point.join('.'))
-    const stringified = point.join('.');
-    console.log(`value is okay`, stringified, isDateValid(stringified));
-    if (!isDateValid(stringified)) {
-      errors.push(true);
-    }
-  });
-  if (errors.length) {
-    console.log(`it has errors?`, !!errors);
-    return false;
-  }
-  console.log(`it has errors?`, errors, !!errors);
-  return true;
-}
-
-async function getStatsByPeriod(name: string, period: IPeriod) {
+export async function getStatsByPeriod(name: string, period: IPeriod) {
   const user = await getUser(name);
   const { y: fromY, m: fromM, d: fromD } = period.from;
   const { y: toY, m: toM, d: toD } = period.to;
@@ -193,22 +135,22 @@ async function getStatsByPeriod(name: string, period: IPeriod) {
     }
     const data = await compareAndGet(period, user);
     if (!_.isEmpty(data)) {
-      console.log(`month is not empty, returning.`.bgYellow, data)
+      // console.log(`month is not empty, returning.`.bgYellow, data)
       return data;
     } else {
-      console.log(`bad months`.red, data);
+      // console.log(`bad months`.red, data);
     }
   }
 }
 
-async function getStatsBySingleDate(name: string, period: IPeriod) {
+export async function getStatsBySingleDate(name: string, period: IPeriod) {
   const { y, m, d } = period.from;
   if (y && m && d) {
     const user = await getUser(name);
-    console.log(`user`, !!user);
+    // console.log(`user`, !!user);
     const data = _.get(user.stats, [y, m, d], []);
-    console.log(`values for ${d}.${m}.${y}:`, data, typeof data);
-    console.log(`will give data for single date`.red);
+    // console.log(`values for ${d}.${m}.${y}:`, data, typeof data);
+    // console.log(`will give data for single date`.red);
     return data;
   }
 }
@@ -308,7 +250,7 @@ app.post('/stats/add', async (req: { body: { name: string, sum: number, comment:
 
 app.post('/stats/get', async (req: { body: { name: string, period: IPeriod } }, res) => {
   const { name, period } = req.body;
-  console.log(`period is`.bgRed, period);
+  // console.log(`period is`.bgRed, period);
   const exists = await isUserExists(name);
   if (!exists) {
     console.log(`returning USER NOT FOUND ERROR`.red)

@@ -1,5 +1,5 @@
 {
-  "extends": "tslint-config-airbnb",
+  "extends": "./node_modules/tslint-config-airbnb/sample/tsconfig.json",
   "compilerOptions": {
     "allowJs": true
   }
