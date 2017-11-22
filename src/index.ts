@@ -248,6 +248,14 @@ app.post('/stats/add', async (req: { body: { name: string, sum: number, comment:
   }
 });
 
+export const getStats = async (name, period) => {
+  if (period.from && period.to) {
+    return await getStatsByPeriod(name, period);
+  } else if (period.from) {
+    return await getStatsBySingleDate(name, period);
+  }
+};
+
 app.post('/stats/get', async (req: { body: { name: string, period: IPeriod } }, res) => {
   const { name, period } = req.body;
   // console.log(`period is`.bgRed, period);
@@ -267,14 +275,7 @@ app.post('/stats/get', async (req: { body: { name: string, period: IPeriod } }, 
       message: 'Period is not valid',
     });
   }
-  const getStats = async () => {
-    if (period.from && period.to) {
-      return await getStatsByPeriod(name, period);
-    } else if (period.from) {
-      return await getStatsBySingleDate(name, period);
-    }
-  };
-  const data = await getStats();
+  const data = await getStats(name, period);
   console.log(`data from periods is`, data);
   if (!_.isUndefined(data)) {
     return res.json({
