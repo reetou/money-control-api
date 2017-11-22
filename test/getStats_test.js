@@ -53,8 +53,8 @@ describe(`getStats functions`.magenta, () => {
 	})
 	
 	it('should return data for username by period without validating with different years', async () => {
-		requestPeriod.from.y = "2016";
-		expectedPeriod.from.y = "2016";
+		requestPeriod.from.y = '2016';
+		expectedPeriod.from.y = '2016';
 		assert.deepEqual(
 			requestPeriod,
 			expectedPeriod,
@@ -67,6 +67,20 @@ describe(`getStats functions`.magenta, () => {
 	it('should return data for username by period without validating with different months', async () => {
 		requestPeriod.from.m = '10';
 		expectedPeriod.from.m = '10';
+		assert.deepEqual(
+			requestPeriod,
+			expectedPeriod,
+			'excepted period with different years'
+		);
+		const result = await getStatsByPeriod(name, requestPeriod);
+		assert.deepEqual(result[0], expectedDataBySpecificPeriod);
+	})
+
+	it('should return data for username by period without validating with different months and years', async () => {
+		requestPeriod.from.m = '10';
+		expectedPeriod.from.m = '10';
+		requestPeriod.from.y = '2016';
+		expectedPeriod.from.y = '2016';
 		assert.deepEqual(
 			requestPeriod,
 			expectedPeriod,
