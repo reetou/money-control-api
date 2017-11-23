@@ -54,7 +54,7 @@ export async function isUserExists(name: string) {
   }
 }
 
-async function editUser(name: string, val: IValue, m) {
+export async function editUser(name: string, val: IValue, m) {
   console.log(`at edituser`.green);
   const f = (format: string) => {
     // console.log(`m is`.red, m);
@@ -155,6 +155,29 @@ export async function getStatsBySingleDate(name: string, period: IPeriod) {
   }
 }
 
+export async function createUser(userData) {
+  const newUser = new User(userData);
+  let res;
+  try {
+    const result = await newUser.save();
+    console.log(`is registered it?`.bgRed, await isUserExists(name));
+    res = {
+      name: result.name,
+      message: `Created user with name ${name}. Good Luck`,
+      status: 'SUCCESS',
+    };
+    return res;
+  } catch (e) {
+    console.error(`Error at creating newUser`, e);
+    res = {
+      name: userData.name,
+      message: `User ${userData.name} already exists.`,
+      status: 'ERROR',
+    };
+    return res;
+  }
+}
+
 app.post('/me', async (req, res) => {
   console.log(`req.body`, req.body);
   const { name = 'default' } = req.body;
@@ -181,27 +204,13 @@ app.post('/create', async (req: { body: { name: string, telegramId: string } }, 
   const result = await isUserExists(name);
   console.log(`is ${name} already exists?`.red, result);
   if (!result) {
-    const newUser = new User({
+    const data = {
       name,
       telegramId,
       stats: {},
-    });
-    try {
-      await newUser.save();
-      console.log(`is registered it?`.bgRed, await isUserExists(name));
-      res.json({
-        name,
-        message: `Created user with name ${name}. Good Luck`,
-        status: 'SUCCESS',
-      });
-    } catch (e) {
-      console.error(`Error at creating newUser`, e);
-      res.json({
-        name,
-        message: `User ${name} already exists.`,
-        status: 'ERROR',
-      });
     }
+    const result = await createUser(data);
+    res.json(result)
   } else {
     res.json({
       name,
