@@ -7,19 +7,22 @@ const config = require('../config.json');
 describe(`getStats functions`.magenta, () => {
 	let requestPeriod, name, expectedData, expectedDataByPeriod, expectedPeriod, expectedDataBySpecificPeriod;
 
-	before('Connecting to db', async () => {
-		await mongoose.connect(config.database);
+	after('Disconnecting from db', async () => {
+		await mongoose.disconnect();
 	})
 
 	beforeEach('Setting default period like it was from request', () => {
 		requestPeriod = {
+			from: { y: '2017',  m: '11',  d: '22', },
 			to: { y: '2017',  m: '11',  d: '24', },
-			from: { y: '2017',  m: '11',  d: '22', }
 		};
-		name = 'BeaReetou';
-		expectedDataByPeriod = [ { date: 1511386876561, comment: 'кофе', sum: '120' } ];
-		expectedData = { '15:25:56': { comment: 'обед', date: 1511353556099, sum: '350'} };
-		expectedDataBySpecificPeriod = { date: 1510598140560, comment: 'Обед', sum: '270' };
+		name = 'TestUser';
+		expectedDataByPeriod = [
+			{ date: 1511353556099, comment: 'TestComment', sum: '42' },
+			{ date: 1511353556011, comment: 'TestComment', sum: '42' },
+		];
+		expectedData = { comment: 'TestComment', date: 1511353556011, sum: '42' };
+		expectedDataBySpecificPeriod = { date: 1511353556099, comment: 'TestComment', sum: '42' };
 		expectedPeriod = {
 			from: { y: '2017', m: '11', d: '22', },
 			to: { y: '2017', m: '11', d: '24', },
@@ -28,14 +31,15 @@ describe(`getStats functions`.magenta, () => {
 
 	it('should return data for username by single date without validating', async () => {
 		_.unset(requestPeriod, 'to')
-		expectedPeriod = { from: { y: '2017', m: '11', d: '22', } };
+		requestPeriod.from.d = '23';
+		expectedPeriod = { from: { y: '2017', m: '11', d: '23', } };
 		assert.deepEqual(
 			requestPeriod,
 			expectedPeriod,
 			'expected period before requesting stats by single date'
 		);
 		const result = await getStatsBySingleDate(name, requestPeriod);
-		assert.deepEqual(result, expectedData, 'expectedData from single date')
+		assert.deepEqual(result['15:26:56'], expectedData, 'expectedData from single date')
 	});
 
 	it('should return data for username by period without validating', async () => {
@@ -93,6 +97,20 @@ describe(`getStats functions`.magenta, () => {
 	it('should return data for username by single data with validating', async () => {
 		_.unset(requestPeriod, 'to');
 		_.unset(expectedPeriod, 'to');
+		requestPeriod.from.d = '23';
+		expectedPeriod.from.d = '23';
+		expectedData = {
+			"15:25:56": {
+				"sum": "42",
+				"comment": "TestComment",
+				"date": 1511353556099
+			},
+			"15:26:56": {
+				"sum": "42",
+				"comment": "TestComment",
+				"date": 1511353556011
+			}
+		}
 		assert.deepEqual(requestPeriod, expectedPeriod);
 		const result = await getStats(name, requestPeriod);
 		assert.deepEqual(result, expectedData);
