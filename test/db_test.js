@@ -1,9 +1,17 @@
 import { assert, expect } from 'chai';
 import * as mongoose from "mongoose";
 import User from '../src/models/User';
-const config = require('../config.json');
 import {getUser, isUserExists, createUser, editUser} from "../src/index";
 import * as moment from "moment";
+import * as envalid from 'envalid';
+
+require('dotenv').config();
+const { url } = envalid;
+const env = envalid.cleanEnv(process.env, {
+	TEST_DB: url()
+});
+
+const { TEST_DB } = env;
 
 describe(`Server`.magenta, () => {
 	let expected, badExpected, userData, expectedData, data, value;
@@ -45,7 +53,7 @@ describe(`Server`.magenta, () => {
 			date: moment("2017-11-25 15:15:15", "YYYY-MM-DD HH:mm:ss"),
 		};
 		await mongoose.disconnect();
-		await mongoose.connect(config.database);
+		await mongoose.connect(TEST_DB);
 		User.collection.remove({ });
 	})
 
