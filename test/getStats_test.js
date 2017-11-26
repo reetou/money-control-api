@@ -2,7 +2,6 @@ import {getStatsByPeriod, getStatsBySingleDate, getStats} from '../src/index';
 import { assert } from 'chai';
 import * as _ from 'lodash'
 import * as mongoose from 'mongoose';
-const config = require('../config.json');
 
 describe(`getStats functions`.magenta, () => {
 	let requestPeriod, name, expectedData, expectedDataByPeriod, expectedPeriod, expectedDataBySpecificPeriod;

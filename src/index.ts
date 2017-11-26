@@ -9,18 +9,23 @@ import User from './models/User';
 import * as moment from 'moment';
 import {IPeriodSource, IPeriod, IValue} from './interfaces/index';
 import {isPeriodValid, isWithinPeriod} from './formatters';
+import * as envalid from 'envalid';
 
 // constants
 const http = require('http');
 const app = express();
 const httpServer = http.createServer(app);
-const client = bluebird.promisifyAll(redis.createClient());
-const config = require('../config.json');
 
-console.log(`db`, config.database);
+require('dotenv').config();
+const { url } = envalid;
+const env = envalid.cleanEnv(process.env, {
+  PROD_DB: url()
+});
+
+const { PROD_DB } = env;
 
 if (mongoose.connection.readyState < 1) {
-  mongoose.connect(config.database);
+  mongoose.connect(PROD_DB);
 }
 
 app.use(bodyParser.urlencoded({ extended: true }));

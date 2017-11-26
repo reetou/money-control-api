@@ -18,6 +18,8 @@
     "body-parser": "^1.18.1",
     "chai": "^4.1.2",
     "colors": "^1.1.2",
+    "dotenv": "^4.0.0",
+    "envalid": "^4.1.1",
     "express": "^4.15.4",
     "flow-bro": "^0.4.1",
     "gulp": "^3.9.1",
