@@ -1,9 +1,7 @@
 import * as express from 'express';
 import 'colors';
 import * as _ from 'lodash';
-import * as redis from 'redis';
 import * as bodyParser from 'body-parser';
-import * as bluebird from 'bluebird';
 import * as mongoose from 'mongoose';
 import User from './models/User';
 import * as moment from 'moment';
