@@ -45,8 +45,7 @@
     "flow-bin": "^0.54.1"
   },
   "scripts": {
-    "server": "nodemon --watch src src/index.ts --exec babel-node --presets es2015,stage-0",
-    "ts": "nodemon --watch src src/index.ts --exec ts-node",
+    "server": "nodemon --watch src src/index.ts --exec ts-node",
     "test": "mocha -w -r ts-node/register"
   },
   "repository": {
